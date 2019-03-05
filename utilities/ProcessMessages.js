@@ -1,6 +1,7 @@
 const   
     Message = require('../models/Message.js'),
-    axios = require('axios')
+    axios = require('axios'),
+    cron = require("node-cron")
 
 let ProcessMessages = {
     checkForMessages: () => {
@@ -40,7 +41,9 @@ let ProcessMessages = {
     },
 
     setCron: (startTime) => {
-        console.log(startTime);
+        cron.schedule("* * * * *", function() {
+            console.log("running a task every minute");
+          });
     }
 };
 

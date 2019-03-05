@@ -5,7 +5,7 @@ const
     mongoose = require("mongoose"),
     dotenv = require('dotenv').config(),
     PORT = 3000,
-    mongooseConnection = `mongodb://${process.env.DBUSER}:${process.env.DBPASSWORD}@ds347665.mlab.com:47665/dogtalk`;
+    mongooseConnection = `mongodb://${process.env.DBUSER}:${process.env.DBPASSWORD}${process.env.MONGOADDRESS}`;
     mongooseOptions = {
         useNewUrlParser: true
     }
