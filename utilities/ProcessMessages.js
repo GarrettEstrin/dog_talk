@@ -1,14 +1,19 @@
 const   
     Message = require('../models/Message.js'),
+    Conversation = require('../models/Conversation.js'),
     axios = require('axios'),
-    cron = require("node-cron")
+    schedule = require('node-schedule'),
+    moment = require('moment');
 
 let ProcessMessages = {
-    checkForMessages: () => {
-        console.log("checking for messages");
-        Message.find({ posted: false}, function (err, messages) {
+    checkForMessages: (conversationId, firstMessage = true) => {
+        Message.find({conversation: conversationId, posted: false}, function (err, messages) {
             if(messages.length > 0){
-                ProcessMessages.sendMessage(messages[0]);
+                if(firstMessage){
+                    ProcessMessages.sendMessage(messages[0]);
+                } else {
+                    ProcessMessages.setMessageCron(messages[0]);
+                }
             } else {
                 return;
             }
@@ -18,32 +23,53 @@ let ProcessMessages = {
     sendMessage: (messageObj) => {
         let url = ProcessMessages.buildUrl(messageObj.message, messageObj.user);
         axios.post(url)
-          .then(function (response) {
+          .then(function (res) {
             Message.findOneAndUpdate({ _id: messageObj._id}, {$set: { posted: true}}, function(err, message){
                 if (err) { throw err; }
-                else { console.log("Updated"); }
+                ProcessMessages.checkForMessages(message.conversation, false);
             });
             return;
           })
-          .catch(function (error) {
-            ProcessMessages.checkForMessages();
+          .catch(function (err) {
+            console.log(err);
           });
     },
 
     buildUrl: (message, user) => {
         let encodedMessage = encodeURIComponent(message);
-        return `https://slack.com/api/chat.postMessage?token=${process.env[user + "TOKEN"]}&channel=testing&text=${encodedMessage}&as_user=true&pretty=1`
+        return `https://slack.com/api/chat.postMessage?token=${process.env[user + "TOKEN"]}&channel=testing2&text=${encodedMessage}&as_user=true&pretty=1`
     },
 
-    randomTimeBetweenMessages: () => {
-        var rand = Math.floor(Math.random() * (3 - 10 + 1) + 1);
-        return rand * 1000;
+    randomTimeBetweenMessagesInSeconds: () => {
+        let rand = Math.random() * (60 - 20) + 20
+        return Math.round(rand);
     },
 
-    setCron: (startTime) => {
-        cron.schedule("* * * * *", function() {
-            console.log("running a task every minute");
-          });
+    setConversationCron: (startTime, conversationId) => {
+        let scheduledTime = ProcessMessages.addMinutes(startTime);
+        let j = schedule.scheduleJob(scheduledTime, function(){
+            ProcessMessages.checkForMessages(conversationId);
+            Conversation.findOneAndUpdate({ _id: conversationId}, {$set: { posted: true}}, function(err, message){
+                if (err) { throw err; }
+            });
+        });
+        return;
+    },
+
+    setMessageCron: (messageObj) => {
+        let scheduledTime = ProcessMessages.addSeconds(ProcessMessages.randomTimeBetweenMessagesInSeconds());
+        let j = schedule.scheduleJob(scheduledTime, function(){
+            ProcessMessages.sendMessage(messageObj);
+        });
+        return;
+    },
+
+    addMinutes: (minutes) => {
+        return moment(new Date()).add(minutes, 'm').toDate();
+    },
+    
+    addSeconds: (seconds) => {
+        return moment(new Date()).add(seconds, 's').toDate();
     }
 };
 
