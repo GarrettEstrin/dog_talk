@@ -44,9 +44,11 @@
             display: none;
         }
 
-        .add-message, .view-conversation {
-            width: 50%;
-            float: left;
+        @media screen and (min-width: 992px) {
+            .add-message, .view-conversation {
+                width: 50%;
+                float: left;
+            }
         }
 
         .message-cont span{
