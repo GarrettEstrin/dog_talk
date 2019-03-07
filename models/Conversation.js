@@ -4,7 +4,8 @@ const mongoose = require('mongoose'),
 
 let Conversation = new Schema({
     posted: Boolean,
-    name: String
+    name: String,
+    channel: String
 },{
     timestamps: true
   })

@@ -6,7 +6,8 @@ let Message = new Schema({
     message: String,
     user: String,
     posted: Boolean,
-    conversation: String
+    conversation: String,
+    channel: String
 },{
     timestamps: true
   })

@@ -21,7 +21,7 @@ let ProcessMessages = {
     },
 
     sendMessage: (messageObj) => {
-        let url = ProcessMessages.buildUrl(messageObj.message, messageObj.user);
+        let url = ProcessMessages.buildUrl(messageObj.message, messageObj.user, messageObj.channel);
         axios.post(url)
           .then(function (res) {
             Message.findOneAndUpdate({ _id: messageObj._id}, {$set: { posted: true}}, function(err, message){
@@ -35,9 +35,9 @@ let ProcessMessages = {
           });
     },
 
-    buildUrl: (message, user) => {
+    buildUrl: (message, user, channel) => {
         let encodedMessage = encodeURIComponent(message);
-        return `https://slack.com/api/chat.postMessage?token=${process.env[user + "TOKEN"]}&channel=testing2&text=${encodedMessage}&as_user=true&pretty=1`
+        return `https://slack.com/api/chat.postMessage?token=${process.env[user + "TOKEN"]}&channel=${channel}&text=${encodedMessage}&as_user=true&pretty=1`
     },
 
     randomTimeBetweenMessagesInSeconds: () => {

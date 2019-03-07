@@ -5,6 +5,8 @@ const
     mongoose = require("mongoose"),
     dotenv = require('dotenv').config(),
     PORT = 3000,
+    messageRoutes = require('./routes/messageRoutes.js'),
+    conversationRoutes = require('./routes/conversationRoutes.js'),
     mongooseConnection = `mongodb://${process.env.DBUSER}:${process.env.DBPASSWORD}${process.env.MONGOADDRESS}`;
     mongooseOptions = {
         useNewUrlParser: true
@@ -22,11 +24,9 @@ const
     app.get('/test', function(req, res){
         res.sendFile(path.join(__dirname+'/test.html'));
     })
-
-    // require routes
-    var routes = require('./routes/messageRoutes.js');
-    // routes
-    app.use('/message', routes)
+    // Apply Routes
+    app.use('/message', messageRoutes);
+    app.use('/conversation', conversationRoutes);
 
     app.listen(process.env.PORT || PORT, function(){
         console.log("Connected on port " + PORT);

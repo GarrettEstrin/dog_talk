@@ -4,9 +4,259 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>DogTalk!</title>
+    <title>Talkin' Dogs</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif
+        }
+        .clearfix:after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+        h1, h3, h4 {
+            text-align: center;
+        }
+        input, select {
+            display: block;
+            width: 90%;
+            margin: 10px auto;
+            height: 20px;
+            border-radius: 5px;
+            border: 1px solid lightblue;
+            padding: 10px;
+            background-color: white;
+        }
+
+        button {
+            margin: 0 auto;
+            display: block;
+            width: 50%;
+            height: 40px;
+            border-radius: 5px;
+            font-size: 20px;
+            background-color: darkseagreen;
+            color: white;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .add-message, .view-conversation {
+            width: 50%;
+            float: left;
+        }
+
+        .message-cont span{
+            max-width: 60%;
+            margin: 10px 0;
+            color: white;
+            padding: 5px;
+            border-radius: 5px;
+        }
+
+
+    </style>
 </head>
 <body>
-    <h1>Make your dogs talk!</h1>
+    <h1>Dog Talk!</h1>
+    <div class="add-message">
+        <h3>Add Message</h3>
+        <input type="text" id="jsMessage" placeholder="Message">
+        <select id="jsUser">
+            <option value="" default>Please Select a User</option>
+            <option value="AJ">AJ</option>
+            <option value="BRUCE">Bruce</option>
+        </select>
+        <select id="jsConversation">
+            <option value="new">New Conversation</option>
+        </select>
+        <input type="text" id="jsConversationName" placeholder="New Conversation Name">
+        <input type="text" id="jsTime" placeholder="Minutes Until Start of Conversation">
+        <input type="text" id="jsChannel" placeholder="What channel do you want this conversation to take place in?">
+        <button id="jsSubmit">Add Message</button>
+    </div>
+    <!-- start View-conversation -->
+    <div class="view-conversation">
+        <h3>View Conversation</h3>
+        <select id="jsViewConversationSelect">
+            <option>No Conversations Available</option>
+        </select>
+
+        <div id="jsConversationCont" style="padding: 5%;"></div>
+    </div>
+    <!-- end view-conversation -->
+    <script>
+        let timeInput = document.getElementById('jsTime'),
+            messageInput = document.getElementById('jsMessage'),
+            userSelect = document.getElementById('jsUser'),
+            conversationSelect = document.getElementById('jsConversation'),
+            viewConversationSelect = document.getElementById('jsViewConversationSelect'),
+            newConversationNameInput = document.getElementById('jsConversationName'),
+            channelInput = document.getElementById('jsChannel'),
+            submitBtn = document.getElementById('jsSubmit');
+        let conversations;
+
+        conversationSelect.addEventListener('change', function(){
+            toggleTimeInput(this);
+        })
+
+        viewConversationSelect.addEventListener('change', function(){
+            getConversationMessages(this.value);
+        })
+
+        function submitMessage(){
+            if(validateInputs()){
+                let url = buildUrl();
+                let xhttp = new XMLHttpRequest();
+                xhttp.onreadystatechange = function() {
+                    if (this.readyState == 4 && this.status == 200) {
+                        location.href = location.href;
+                    }
+                };
+                xhttp.open("POST", url, true);
+                xhttp.send();
+            } else {
+                console.log('inputs are not valid');
+            }
+        }
+
+        function validateInputs(){
+            let user = userSelect.value,
+                message = messageInput.value,
+                conversationName = conversationSelect.value,
+                conversationStartTime = parseInt(timeInput.value),
+                channel = channelInput.value,
+                newConversationName = newConversationNameInput.value;
+            if(user.length == 0 || message.length == 0){
+                return false
+            } else if(conversationName == "new" && conversationName.length == 0 || conversationName == "new" && channel.length == 0){
+                return false;
+            } else if(typeof(conversationStartTime) != 'number'){
+                return false
+            }
+            else {
+                return true;
+            }
+        }
+
+        function buildUrl(){
+            let user = userSelect.value,
+                message = messageInput.value,
+                conversationName = conversationSelect.value,
+                conversationStartTime = timeInput.value,
+                channel = channelInput.value,
+                newConversationName = newConversationNameInput.value;
+            let url = `/message/sendMessage?user=${user}&message=${message}&conversation=${conversationName}&time=${conversationStartTime}&conversationName=${newConversationName}&channel=${channel}`
+            return url;
+        }
+
+        function toggleTimeInput(select){
+            let conversationValue = select.value;
+            if(conversationValue !== "new"){
+                timeInput.classList.add('hidden');
+                newConversationNameInput.classList.add('hidden');
+                channelInput.classList.add('hidden');
+            } else {
+                timeInput.classList.remove('hidden');
+                newConversationNameInput.classList.remove('hidden');
+                channelInput.classList.remove('hidden');
+            }
+        }
+
+        submitBtn.addEventListener('click', function(){
+            submitMessage();
+        })
+
+        function getUnpostedConversations(){
+            let xhttp = new XMLHttpRequest();
+            let url = '/conversation/getUnpostedConversations';
+            xhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    setUnpostedConversationsForSelect(JSON.parse(this.response).conversations);
+                    conversations = JSON.parse(this.response).conversations;
+                }
+            };
+            xhttp.open("GET", url, true);
+            xhttp.send();
+        }
+
+        function setUnpostedConversationsForSelect(conversations){
+            let newOption = conversationSelect.innerHTML;
+            let optionsHtml = newOption;
+            for(let i=0,a=conversations,c=a.length;i<c;i++){
+                let option = `<option value="${a[i]._id}">${a[i].name}</option>`;
+                optionsHtml += option;
+            }
+            conversationSelect.innerHTML = optionsHtml;
+        }
+
+        function getConversations(){
+            let xhttp = new XMLHttpRequest();
+            let url = '/conversation/getConversations';
+            xhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    setConversationsForSelect(JSON.parse(this.response).conversations);
+                }
+            };
+            xhttp.open("GET", url, true);
+            xhttp.send();
+        }
+
+        function setConversationsForSelect(conversations){
+            if(conversations.length == 0){
+                return;
+            }
+            let optionsHtml = "";
+            for(let i=0,a=conversations,c=a.length;i<c;i++){
+                let option = `<option value="${a[i]._id}">${a[i].name}</option>`;
+                optionsHtml += option;
+            }
+            viewConversationSelect.innerHTML = optionsHtml;
+            if(conversations.length > 0){
+                getConversationMessages(conversations[0]._id);
+            }
+        }
+
+        function getConversationMessages(conversationId){
+            let xhttp = new XMLHttpRequest();
+            let url = `/message/getMessages?conversation=${conversationId}`;
+            xhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    buildConversation(JSON.parse(this.response).messages);
+                }
+            };
+            xhttp.open("GET", url, true);
+            xhttp.send();
+        }
+
+        function buildConversation(messages){
+            let html = "";
+            let firstUser = messages[0].user;
+            let float = "left";
+            let backgroundColor = "dodgerblue";
+            for(let i=0, a=messages, c=a.length;i<c;i++){
+                if(a[i].user == firstUser){
+                    float = "left";
+                    backgroundColor = "dodgerblue";
+                } else {
+                    float = "right";
+                    backgroundColor = "grey";
+                }
+                html += `<div class="message-cont clearfix"><span style="float: ${float}; text-align: ${float};background-color: ${backgroundColor}">${a[i].user}: ${a[i].message}</span></div>`;
+            }
+            setConversation(html, messages[0].conversation);
+        }
+
+        function setConversation(html, conversationId){
+            document.getElementById('jsConversationCont').innerHTML = html;
+        }
+
+
+        getUnpostedConversations();
+        getConversations();
+    </script>
 </body>
 </html>
