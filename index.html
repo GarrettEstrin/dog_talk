@@ -210,6 +210,7 @@
                 return;
             }
             let optionsHtml = "";
+            conversations = conversations.reverse();
             for(let i=0,a=conversations,c=a.length;i<c;i++){
                 let option = `<option value="${a[i]._id}">${a[i].name}</option>`;
                 optionsHtml += option;

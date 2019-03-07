@@ -11,7 +11,6 @@ const
     mongooseOptions = {
         useNewUrlParser: true
     }
-    console.log(mongooseConnection);
     mongoose.connect(mongooseConnection, mongooseOptions, function(err) {
     if(err) return console.log(err)
         console.log("Connected to MongoDB");
