@@ -31,7 +31,7 @@
         <select id="jsViewConversationSelect">
             <option>No Conversations Available</option>
         </select>
-
+        <h6 id="jsPostedMessage" class="hidden" style='text-align: center; margin: 0;'>This conversation has been posted</h6>
         <div id="jsConversationCont" style="padding: 5%;"></div>
     </div>
     <!-- end view-conversation -->
@@ -52,6 +52,12 @@
 
         viewConversationSelect.addEventListener('change', function(){
             getConversationMessages(this.value);
+            console.log(this.options[this.options.selectedIndex].dataset.posted);
+            if(this.options[this.options.selectedIndex].dataset.posted == "true"){
+                document.getElementById('jsPostedMessage').classList.remove('hidden');
+            } else {
+                document.getElementById('jsPostedMessage').classList.add('hidden');
+            }
         })
 
         function submitMessage(){
@@ -134,7 +140,7 @@
             let newOption = conversationSelect.innerHTML;
             let optionsHtml = newOption;
             for(let i=0,a=conversations,c=a.length;i<c;i++){
-                let option = `<option value="${a[i]._id}">${a[i].name}</option>`;
+                let option = `<option value="${a[i]._id}" data-posted="${a[i].posted}">${a[i].name}</option>`;
                 optionsHtml += option;
             }
             conversationSelect.innerHTML = optionsHtml;
@@ -159,13 +165,18 @@
             let optionsHtml = "";
             conversations = conversations.reverse();
             for(let i=0,a=conversations,c=a.length;i<c;i++){
-                let option = `<option value="${a[i]._id}">${a[i].name}</option>`;
+                let option = `<option value="${a[i]._id}" data-posted="${a[i].posted}">${a[i].name}</option>`;
                 optionsHtml += option;
             }
             viewConversationSelect.innerHTML = optionsHtml;
-            if(conversations.length > 0){
-                getConversationMessages(conversations[0]._id);
+            getConversationMessages(conversations[0]._id);
+            if ("createEvent" in document) {
+                var evt = document.createEvent("HTMLEvents");
+                evt.initEvent("change", false, true);
+                viewConversationSelect.dispatchEvent(evt);
             }
+            else
+                viewConversationSelect.fireEvent("onchange");
         }
 
         function getConversationMessages(conversationId){
@@ -181,13 +192,18 @@
         }
 
         function buildConversation(messages){
+            if(messages[0] == undefined){
+                let noMessagesHtml = '<h6 style="text-align: center; margin: 0;">This conversation has no messages</h6>';
+                setConversation(noMessagesHtml, null);
+                return;
+            }
             let html = "";
             let firstUser = messages[0].user;
             let float = "left";
             let backgroundColor = "dodgerblue";
             let posted = messages[0].posted;
             if(posted){
-                html = "<h6 style='text-align: center; margin: 0;'>This conversation has been posted</h6>";
+                // html = "<h6 style='text-align: center; margin: 0;'>This conversation has been posted</h6>";
             }
             for(let i=0, a=messages, c=a.length;i<c;i++){
                 if(a[i].user == firstUser){
