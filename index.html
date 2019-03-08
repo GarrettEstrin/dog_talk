@@ -24,6 +24,7 @@
         <input type="text" id="jsTime" placeholder="Minutes Until Start of Conversation">
         <input type="text" id="jsChannel" placeholder="What channel do you want this conversation to take place in?">
         <button id="jsSubmit">Add Message</button>
+        <h3 id="jsInputError" class="error hidden">Please Fill in All Inputs</h3>
     </div>
     <!-- start View-conversation -->
     <div class="view-conversation">
@@ -52,7 +53,6 @@
 
         viewConversationSelect.addEventListener('change', function(){
             getConversationMessages(this.value);
-            console.log(this.options[this.options.selectedIndex].dataset.posted);
             if(this.options[this.options.selectedIndex].dataset.posted == "true"){
                 document.getElementById('jsPostedMessage').classList.remove('hidden');
             } else {
@@ -72,7 +72,7 @@
                 xhttp.open("POST", url, true);
                 xhttp.send();
             } else {
-                console.log('inputs are not valid');
+                showInputError();
             }
         }
 
@@ -224,6 +224,10 @@
 
         function setConversation(html, conversationId){
             document.getElementById('jsConversationCont').innerHTML = html;
+        }
+
+        function showInputError(){
+            document.getElementById('jsInputError').classList.remove('hidden');
         }
 
 

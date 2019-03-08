@@ -54,3 +54,11 @@ button {
     max-width: 600px;
     margin: 0 auto;
 }
+
+.error {
+    color: crimson;
+    border: 1px solid;
+    width: 285px;
+    margin: 10px auto;
+    padding: 10px;
+}
