@@ -42,6 +42,33 @@ router.route('/getMessages')
         })
     })
 
+router.route('/getMessage/:messageId')
+    .get(function(req, res){
+        Message.find({_id: req.params.messageId}, function(err, message){
+            res.status(200).json({
+                status: "ok",
+                message
+            })
+        })
+    })
+router.route('/editMessage')
+    .patch(function(req, res){
+        Message.findByIdAndUpdate(req.query.messageId,{message: req.query.updatedMessage}, function(err, message){
+            res.status(200).json({
+                status: "ok"
+            })
+        })
+    })
+
+router.route('/deleteMessage')
+    .delete(function(req, res){
+        Message.findByIdAndDelete(req.query.messageId, function(err, message){
+            res.status(200).json({
+                status: "ok"
+            })
+        })
+    })
+
 module.exports = router
 
 
