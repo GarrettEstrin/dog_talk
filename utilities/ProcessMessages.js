@@ -15,6 +15,9 @@ let ProcessMessages = {
                     ProcessMessages.setMessageCron(messages[0]);
                 }
             } else {
+                Conversation.findOneAndUpdate({ _id: conversationId}, {$set: { posted: true}}, function(err, message){
+                    if (err) { throw err; }
+                });
                 return;
             }
         }).sort({ "date_time" : 1 }).limit(1)
