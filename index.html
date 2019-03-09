@@ -22,7 +22,10 @@
         </select>
         <input type="text" id="jsConversationName" placeholder="New Conversation Name">
         <input type="text" id="jsTime" placeholder="Minutes Until Start of Conversation">
-        <input type="text" id="jsChannel" placeholder="What channel do you want this conversation to take place in?">
+        <select id="jsChannel">
+            <option value="">Please Select a User to See Available Channels</option>
+        </select>
+        <input class="hidden" type="text" id="jsManualChannel" placeholder="What channel do you want this conversation to take place in?">
         <button id="jsSubmit">Add Message</button>
         <h3 id="jsInputError" class="error hidden">Please Fill in All Inputs</h3>
     </div>
@@ -43,7 +46,8 @@
             conversationSelect = document.getElementById('jsConversation'),
             viewConversationSelect = document.getElementById('jsViewConversationSelect'),
             newConversationNameInput = document.getElementById('jsConversationName'),
-            channelInput = document.getElementById('jsChannel'),
+            channelSelect = document.getElementById('jsChannel'),
+            manualChannelInput = document.getElementById('jsManualChannel'),
             submitBtn = document.getElementById('jsSubmit');
         let conversations;
 
@@ -81,18 +85,23 @@
                 message = messageInput.value,
                 conversationName = conversationSelect.value,
                 conversationStartTime = parseInt(timeInput.value),
-                channel = channelInput.value,
+                channel = channelSelect.value,
                 newConversationName = newConversationNameInput.value;
             if(user.length == 0 || message.length == 0){
                 return false
             } else if(conversationName == "new" && conversationName.length == 0 || conversationName == "new" && channel.length == 0){
                 return false;
             } else if(typeof(conversationStartTime) != 'number'){
-                return false
+                return false;
+            } else if(channel == "manual"){
+                if(conversationName != "new"){
+                    return true;
+                }
+                if(document.getElementById('jsManualChannel').value.length == 0){
+                    return false;
+                }
             }
-            else {
-                return true;
-            }
+            return true;
         }
 
         function buildUrl(){
@@ -100,9 +109,13 @@
                 message = messageInput.value,
                 conversationName = conversationSelect.value,
                 conversationStartTime = timeInput.value,
-                channel = channelInput.value,
+                channel = channelSelect.value,
                 newConversationName = newConversationNameInput.value;
+                if(channel == 'manual'){
+                    channel = document.getElementById('jsManualChannel').value;
+                }
             let url = `/message/sendMessage?user=${user}&message=${message}&conversation=${conversationName}&time=${conversationStartTime}&conversationName=${newConversationName}&channel=${channel}`
+
             return url;
         }
 
@@ -111,11 +124,14 @@
             if(conversationValue !== "new"){
                 timeInput.classList.add('hidden');
                 newConversationNameInput.classList.add('hidden');
-                channelInput.classList.add('hidden');
+                channelSelect.classList.add('hidden');
+                manualChannelInput.classList.add('hidden');
+                
             } else {
                 timeInput.classList.remove('hidden');
                 newConversationNameInput.classList.remove('hidden');
-                channelInput.classList.remove('hidden');
+                channelSelect.classList.remove('hidden');
+                manualChannelInput.classList.remove('hidden');
             }
         }
 
@@ -202,9 +218,6 @@
             let float = "left";
             let backgroundColor = "dodgerblue";
             let posted = messages[0].posted;
-            if(posted){
-                // html = "<h6 style='text-align: center; margin: 0;'>This conversation has been posted</h6>";
-            }
             for(let i=0, a=messages, c=a.length;i<c;i++){
                 if(a[i].user == firstUser){
                     float = "left";
@@ -229,6 +242,50 @@
         function showInputError(){
             document.getElementById('jsInputError').classList.remove('hidden');
         }
+
+        userSelect.addEventListener('change', function(){
+            getUsersChannels(this.value);
+        })
+
+        function getUsersChannels(user){
+            let xhttp = new XMLHttpRequest();
+            let url = `/message/getChannels?user=${user}`;
+            xhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    setSelectOptionsForChannel(JSON.parse(this.response).channels);
+                }
+            };
+            xhttp.open("GET", url, true);
+            xhttp.send();
+        }
+
+        function setSelectOptionsForChannel(channels){
+            if(channels.length == 0){
+                return;
+            }
+            let optionsHtml = '<option value="manual">Manually Enter a Channel</option>';
+            for(let i=0,a=channels,c=a.length;i<c;i++){
+                let option = `<option value="${a[i].name}">${a[i].name}</option>`;
+                optionsHtml += option;
+            }
+            channelSelect.innerHTML = optionsHtml;
+            if ("createEvent" in document) {
+                var evt = document.createEvent("HTMLEvents");
+                evt.initEvent("change", false, true);
+                channelSelect.dispatchEvent(evt);
+            }
+            else
+                channelSelect.fireEvent("onchange");
+        }
+
+        channelSelect.addEventListener('change', function(){
+            let manualChannelInput = document.getElementById('jsManualChannel');
+            if(this.value == "manual"){
+                manualChannelInput.classList.remove('hidden');
+            } else {
+                manualChannelInput.classList.add('hidden');
+            }
+        })
 
 
         getUnpostedConversations();

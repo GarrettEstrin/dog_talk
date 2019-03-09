@@ -3,6 +3,7 @@ const
     router = express.Router(),
     Message = require('../models/Message.js'),
     Conversation = require('../models/Conversation.js'),
+    axios = require('axios'),
     processMessages = require('../utilities/ProcessMessages.js');
 
 router.route('/sendMessage')
@@ -67,6 +68,21 @@ router.route('/deleteMessage')
                 status: "ok"
             })
         })
+    })
+
+router.route('/getChannels')
+    .get(function(req, res){
+        let url = `https://slack.com/api/conversations.list?token=${process.env[req.query.user + "TOKEN"]}&types=public_channel,private_channel`;
+        axios.get(url)
+        .then((axiosResponse) => {
+            res.status(200).json({
+                status: 'ok',
+                channels: axiosResponse.data.channels
+            })
+        })
+        .catch(function (err) {
+          console.log(err);
+        });
     })
 
 module.exports = router
